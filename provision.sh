@@ -14,7 +14,69 @@ apt-get install -y --no-install-recommends \
   curl \
   gnupg \
   git \
-  jq
+  jq \
+  zsh
+
+chsh -s "$(command -v zsh)" "${SSH_USER}" || usermod -s "$(command -v zsh)" "${SSH_USER}"
+
+# --- oh-my-zsh --------------------------------------------------------------
+if ! sudo -u "${SSH_USER}" test -d "/home/${SSH_USER}/.oh-my-zsh"; then
+  # The installer can exit non-zero here despite completing successfully
+  # (e.g. trying to exec an interactive zsh with no TTY); `|| true` avoids
+  # that tripping `set -e`, and the `test -d` guard covers real failures.
+  sudo -u "${SSH_USER}" sh -c \
+    'export RUNZSH=no CHSH=no; sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended' \
+    </dev/null || true
+  sudo -u "${SSH_USER}" test -d "/home/${SSH_USER}/.oh-my-zsh"
+fi
+
+sed -i \
+  -e 's/^ZSH_THEME=.*/ZSH_THEME="bira"/' \
+  -e 's/^plugins=(.*/plugins=()/' \
+  "/home/${SSH_USER}/.zshrc"
+
+ZSHRC="/home/${SSH_USER}/.zshrc"
+if ! grep -qF 'scripts/dotfiles/zshrc' "${ZSHRC}"; then
+  cat >>"${ZSHRC}" <<'EOF'
+
+if [ -f $HOME/scripts/dotfiles/zshrc ]; then
+  source $HOME/scripts/dotfiles/zshrc
+fi
+EOF
+fi
+
+# --- Atuin (shell history sync/search) -------------------------------------
+if ! sudo -u "${SSH_USER}" test -x "/home/${SSH_USER}/.atuin/bin/atuin"; then
+  # </dev/null so the installer's history-import prompt gets EOF instead of
+  # hanging under Vagrant's non-interactive shell provisioner. Retried and
+  # non-fatal: a transient network hiccup right after boot shouldn't abort
+  # the whole provision run (atuin isn't essential to the VM's core purpose).
+  for attempt in 1 2 3; do
+    if sudo -u "${SSH_USER}" bash -c 'curl --proto "=https" --tlsv1.2 -sSf https://setup.atuin.sh | sh' </dev/null; then
+      break
+    fi
+    echo "==> WARNING: atuin install attempt ${attempt} failed"
+    sleep 5
+  done
+fi
+
+# --- Clone repos (relies on the SSH keypair provisioned above) -------------
+if sudo -u "${SSH_USER}" test -f "/home/${SSH_USER}/.ssh/id_rsa"; then
+  for repo in \
+    "git@github.com:rconway/scripts" \
+    "git@github.com:rconway/localcoda" \
+    "git@github.com:EOEPCA/eoepca-killercoda"; do
+    dest="$(basename "${repo}")"
+    if ! sudo -u "${SSH_USER}" test -d "/home/${SSH_USER}/${dest}"; then
+      # accept-new: trust the host key on first connect instead of a
+      # separate ssh-keyscan step; don't let one failed clone (e.g. auth
+      # not yet set up for a given repo) abort the rest of provisioning.
+      sudo -u "${SSH_USER}" env GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new" \
+        git -C "/home/${SSH_USER}" clone "${repo}" \
+        || echo "==> WARNING: failed to clone ${repo}, continuing"
+    fi
+  done
+fi
 
 # --- Docker Engine (official apt repo) -------------------------------------
 if ! command -v docker &>/dev/null; then
