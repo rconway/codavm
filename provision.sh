@@ -47,17 +47,9 @@ fi
 
 # --- Atuin (shell history sync/search) -------------------------------------
 if ! sudo -u "${SSH_USER}" test -x "/home/${SSH_USER}/.atuin/bin/atuin"; then
-  # </dev/null so the installer's history-import prompt gets EOF instead of
-  # hanging under Vagrant's non-interactive shell provisioner. Retried and
-  # non-fatal: a transient network hiccup right after boot shouldn't abort
-  # the whole provision run (atuin isn't essential to the VM's core purpose).
-  for attempt in 1 2 3; do
-    if sudo -u "${SSH_USER}" bash -c 'curl --proto "=https" --tlsv1.2 -sSf https://setup.atuin.sh | sh' </dev/null; then
-      break
-    fi
-    echo "==> WARNING: atuin install attempt ${attempt} failed"
-    sleep 5
-  done
+  # --non-interactive skips all setup prompts outright (avoids relying on
+  # /dev/tty absence, which isn't reliable under Vagrant's shell provisioner).
+  sudo -u "${SSH_USER}" bash -c 'curl --proto "=https" --tlsv1.2 -sSf https://setup.atuin.sh | sh -s -- --non-interactive' </dev/null
 fi
 
 # --- Clone repos (relies on the SSH keypair provisioned above) -------------
