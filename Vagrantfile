@@ -15,6 +15,10 @@ Vagrant.configure("2") do |config|
   config.vm.provider :libvirt do |lv|
     lv.memory = 4096
     lv.cpus = 2
+    # Works around a vagrant-libvirt bug where the auto-detected custom CPU
+    # model ends up with a vendor but no model in the generated domain XML,
+    # causing "CPU vendor specified without CPU model" on redefine.
+    lv.cpu_mode = "host-passthrough"
   end
 
   # Static IP (stable across `vagrant destroy`/`up`, unlike DHCP) on the
