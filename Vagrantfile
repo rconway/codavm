@@ -13,8 +13,8 @@ Vagrant.configure("2") do |config|
   config.vm.hostname = "codavm"
 
   config.vm.provider :libvirt do |lv|
-    lv.memory = 4096
-    lv.cpus = 2
+    lv.memory = 8192
+    lv.cpus = 4
     # Works around a vagrant-libvirt bug where the auto-detected custom CPU
     # model ends up with a vendor but no model in the generated domain XML,
     # causing "CPU vendor specified without CPU model" on redefine.
