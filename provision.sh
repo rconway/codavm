@@ -108,12 +108,19 @@ EOF
 # End of localcoda repo modifications
 
 # MODS for eoepca-killercoda repos
+#
+# Switch to the appropriate branch for eoepca-killercoda
 sudo -u "${SSH_USER}" bash -c '
 cd "$HOME/eoepca-killercoda" && git switch eoepca-2.1 ; cd "$HOME"
 cat <<EOF >"$HOME/eoepca-killercoda/.env"
 export LOCALCODA_ROOT="../localcoda"
 EOF
 '
+# Deploy k9s for each tutorial
+sudo -u "${SSH_USER}" bash -c '
+find $HOME/eoepca-killercoda -path "$HOME/eoepca-killercoda/commons" -prune -o -name assets -type d -exec ln -snf $HOME/eoepca-killercoda/commons/assets/k9s {} \;
+'
+# End of eoepca-killercoda repo modifications
 
 # --- Docker Engine (official apt repo) -------------------------------------
 if ! command -v docker &>/dev/null; then
