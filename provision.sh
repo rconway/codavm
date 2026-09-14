@@ -70,6 +70,51 @@ if sudo -u "${SSH_USER}" test -f "/home/${SSH_USER}/.ssh/id_rsa"; then
   done
 fi
 
+# MODS for localcoda repo
+#
+# docker registries configuration
+sudo -u "${SSH_USER}" bash -c '
+cat <<EOF >"$HOME/localcoda/registries.yaml"
+mirrors:
+  "docker.io":
+    endpoint:
+      - http://docker.io.registry.c0a80032.nip.io:5000
+  "ghcr.io":
+    endpoint:
+      - http://ghcr.io.registry.c0a80032.nip.io:5000
+  "quay.io":
+    endpoint:
+      - http://quay.io.registry.c0a80032.nip.io:5000
+configs:
+  "docker.io":
+    tls:
+      insecure: true
+  "ghcr.io":
+    tls:
+      insecure: true
+  "quay.io":
+    tls:
+      insecure: true
+EOF
+'
+
+# localcoda config
+sudo -u "${SSH_USER}" bash -c '
+cat <<EOF >> "$HOME/localcoda/backend/cfg/conf"
+VIRT_ENGINE=sysbox
+K3S_REGISTRY_YAML="$HOME/localcoda/registries.yaml"
+EOF
+'
+# End of localcoda repo modifications
+
+# MODS for eoepca-killercoda repos
+sudo -u "${SSH_USER}" bash -c '
+cd "$HOME/eoepca-killercoda" && git switch eoepca-2.1 ; cd "$HOME"
+cat <<EOF >"$HOME/eoepca-killercoda/.env"
+export LOCALCODA_ROOT="../localcoda"
+EOF
+'
+
 # --- Docker Engine (official apt repo) -------------------------------------
 if ! command -v docker &>/dev/null; then
   install -m 0755 -d /etc/apt/keyrings
