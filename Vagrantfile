@@ -21,12 +21,6 @@ Vagrant.configure("2") do |config|
     lv.cpu_mode = "host-passthrough"
   end
 
-  # Convenience port forwards for the common dev-server ports, reachable at
-  # localhost:<port> on the host.
-  [3000, 5000, 8000, 8080].each do |port|
-    config.vm.network "forwarded_port", guest: port, host: port, auto_correct: true
-  end
-
   # Required for VS Code Remote-SSH / Dev Containers to work smoothly.
   config.ssh.forward_agent = true
 
