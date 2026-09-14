@@ -21,12 +21,6 @@ Vagrant.configure("2") do |config|
     lv.cpu_mode = "host-passthrough"
   end
 
-  # Static IP (stable across `vagrant destroy`/`up`, unlike DHCP) on the
-  # libvirt NAT network so web services bound to 0.0.0.0 in the VM are
-  # reachable from the host at this address. Must stay inside the
-  # 172.28.128.0/24 subnet vagrant-libvirt uses for private networks.
-  config.vm.network "private_network", ip: "172.28.128.100"
-
   # Convenience port forwards for the common dev-server ports, reachable at
   # localhost:<port> on the host.
   [3000, 5000, 8000, 8080].each do |port|
