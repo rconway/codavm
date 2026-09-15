@@ -13,6 +13,7 @@ Vagrant.configure("2") do |config|
   config.vm.hostname = "codavm"
 
   # VirtualBox
+  config.vm.disk :disk, size: "60GB", primary: true
   config.vm.provider :virtualbox do |vb|
     vb.memory = 8192
     vb.cpus = 4
@@ -22,11 +23,14 @@ Vagrant.configure("2") do |config|
   config.vm.provider :libvirt do |lv|
     lv.memory = 8192
     lv.cpus = 4
-    # Works around a vagrant-libvirt bug where the auto-detected custom CPU
-    # model ends up with a vendor but no model in the generated domain XML,
-    # causing "CPU vendor specified without CPU model" on redefine.
-    lv.cpu_mode = "host-passthrough"
+    lv.machine_virtual_size = 60
   end
+
+  # Expand the file-system to the disk size
+  config.vm.provision "shell", inline: <<-SHELL
+    lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
+    resize2fs /dev/ubuntu-vg/ubuntu-lv
+  SHELL
 
   # Required for VS Code Remote-SSH / Dev Containers to work smoothly.
   config.ssh.forward_agent = true
