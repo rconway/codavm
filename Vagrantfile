@@ -12,6 +12,13 @@ Vagrant.configure("2") do |config|
 
   config.vm.hostname = "codavm"
 
+  # VirtualBox
+  config.vm.provider :virtualbox do |vb|
+    vb.memory = 8192
+    vb.cpus = 4
+  end
+
+  # libvirt
   config.vm.provider :libvirt do |lv|
     lv.memory = 8192
     lv.cpus = 4
