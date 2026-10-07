@@ -134,18 +134,24 @@ if ! command -v sysbox-runc &>/dev/null; then
   rm -f "/tmp/${SYSBOX_DEB}"
 fi
 
-# Containers use the VM's DNS resolver, libvirt doesn't answer short service names, which makes gRPC lookups time out.
+# --- Configure Docker to use the VM's DNS resolver via the bridge network IP ---
+# (libvirt doesn't answer short service names, which makes gRPC lookups time out)
+#
+# Deduce the docker bridge IP, which will be used as the DNS resolver for containers.
 DOCKER_BRIDGE_IP="$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')"
-
+#
+# Configure systemd-resolved to listen on the Docker bridge IP
 mkdir -p /etc/systemd/resolved.conf.d
 cat >/etc/systemd/resolved.conf.d/docker-bridge.conf <<EOF
 [Resolve]
 DNSStubListenerExtra=${DOCKER_BRIDGE_IP}
 EOF
 systemctl restart systemd-resolved
-
+#
+# Update Docker daemon configuration to use the Docker bridge IP as the DNS server for containers.
 jq --arg ip "${DOCKER_BRIDGE_IP}" '.dns = [$ip]' /etc/docker/daemon.json >/tmp/daemon.json
 mv /tmp/daemon.json /etc/docker/daemon.json
+# ---
 
 # The sysbox package registers itself as a Docker runtime and restarts
 # docker + sysbox services on install/upgrade, but make sure both are up.

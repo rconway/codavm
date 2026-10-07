@@ -27,6 +27,21 @@ The default VM resources are 4 CPUs, 8 GB RAM, and a 64 GB disk. Make sure the h
 | `CODAVM_NAME` | `codavm` | Vagrant machine name (SSH config host and libvirt domain) |
 | `CODAVM_HOSTNAME` | `codavm` | Guest hostname |
 | `CODAVM_EXT_DOMAIN_NAME` | *(none)* | Routable DNS domain (e.g. `mydomain.com`) to use instead of the nip.io domain derived from the guest IP |
+| `CODAVM_PORT_MIN` | `20000` | First Localcoda tutorial port to configure and forward |
+| `CODAVM_PORT_MAX` | `20009` | Last Localcoda tutorial port to configure and forward |
+
+By default, tutorial URLs use a nip.io domain derived from the VM's private IP. To use a routable domain instead, set `CODAVM_EXT_DOMAIN_NAME` before starting the VM and configure wildcard DNS for that domain to resolve to the Vagrant host's reachable IP address. When an external domain is set, Vagrant forwards the configured tutorial port range from the host to the VM on all host interfaces; allow that range through the host firewall and any upstream firewall. The port bounds must include the ports assigned by Localcoda tutorials.
+
+For example, if wildcard DNS for `tutorials.example.com` points to the host, configure the VM and start it with:
+
+```sh
+export CODAVM_EXT_DOMAIN_NAME=tutorials.example.com
+export CODAVM_PORT_MIN=20000
+export CODAVM_PORT_MAX=20009
+vagrant up --provider=libvirt
+```
+
+Leave `CODAVM_EXT_DOMAIN_NAME` unset to keep using nip.io URLs without forwarding tutorial ports from the host.
 
 For example, to use fewer resources with libvirt:
 
@@ -158,5 +173,6 @@ ln -s ./contrib/10-enable-k9s-for-all-tutorials.sh .
 ## Notes
 
 - The Vagrantfile supports VirtualBox and libvirt. The provider selected by `vagrant up` must be installed on the host.
+- Provisioning configures Docker to use the VM's local DNS resolver, including on libvirt, so containers can resolve tutorial service names.
 - If present on the host, Vagrant copies an SSH key and the host Git config (`~/.config/git/config` and/or `~/.gitconfig`) into the guest during provisioning. This makes it possible to use your Git identity and push to repositories over SSH from the VM.
 - If provisioning needs to be rerun after a change, use `vagrant provision` from the host repository directory - or sometimes `vagrant reload --provision` if the VM needs to be restarted as well.
