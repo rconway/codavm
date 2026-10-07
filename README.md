@@ -14,7 +14,9 @@ This repository defines a Vagrant VM primarily as a self-contained environment f
     - [Provider docs](https://developer.hashicorp.com/vagrant/docs/providers/virtualbox)
   - **libvirt:** install and configure libvirt/QEMU for your host, then install the Vagrant provider plugin with `vagrant plugin install vagrant-libvirt`. The plugin may also require host development libraries; follow the `vagrant-libvirt` installation instructions for your distribution.
 
-The default VM resources are 4 CPUs, 8 GB RAM, and a 64 GB disk. Make sure the host has enough available resources. These host environment variables configure the Vagrant machine name, guest hostname, VM resources, guest addresses, and tutorial branch:
+## Configuration
+
+The VM can be configured using the following environment variables before starting it with Vagrant:
 
 | Environment variable | Default | Setting |
 | --- | ---: | --- |
@@ -30,6 +32,25 @@ The default VM resources are 4 CPUs, 8 GB RAM, and a 64 GB disk. Make sure the h
 | `CODAVM_PORT_MIN` | `20000` | First Localcoda tutorial port to configure and forward |
 | `CODAVM_PORT_MAX` | `20009` | Last Localcoda tutorial port to configure and forward |
 
+ These host environment variables allow to configure aspects such as: the Vagrant machine name, guest hostname, VM resources, guest addresses, and tutorial branch.
+
+### Configuration - VM Resources
+
+The default VM resources are 4 CPUs, 8 GB RAM, and a 64 GB disk. Make sure the host has enough available resources.
+
+For example, to use fewer resources with libvirt:
+
+```sh
+export CODAVM_CPUS=2
+export CODAVM_MEMORY_MB=4096
+export CODAVM_DISK_GB=40
+vagrant up --provider=libvirt
+```
+
+Keep the variables set for later Vagrant commands in that shell so its configuration continues to match the VM. Resource values must be positive integers; IP overrides must be IPv4 addresses. Initial startup provisions Ubuntu, installs Docker and Sysbox, and clones the tutorial repositories, so allow time for downloads and ensure the host has internet access.
+
+### Configuration - External Domain and Ports
+
 By default, tutorial URLs use a nip.io domain derived from the VM's private IP. To use a routable domain instead, set `CODAVM_EXT_DOMAIN_NAME` before starting the VM and configure wildcard DNS for that domain to resolve to the Vagrant host's reachable IP address. When an external domain is set, Vagrant forwards the configured tutorial port range from the host to the VM on all host interfaces; allow that range through the host firewall and any upstream firewall. The port bounds must include the ports assigned by Localcoda tutorials.
 
 For example, if wildcard DNS for `tutorials.example.com` points to the host, configure the VM and start it with:
@@ -43,16 +64,7 @@ vagrant up --provider=libvirt
 
 Leave `CODAVM_EXT_DOMAIN_NAME` unset to keep using nip.io URLs without forwarding tutorial ports from the host.
 
-For example, to use fewer resources with libvirt:
-
-```sh
-export CODAVM_CPUS=2
-export CODAVM_MEMORY_MB=4096
-export CODAVM_DISK_GB=40
-vagrant up --provider=libvirt
-```
-
-Keep the variables set for later Vagrant commands in that shell so its configuration continues to match the VM. Resource values must be positive integers; IP overrides must be IPv4 addresses. Initial startup provisions Ubuntu, installs Docker and Sysbox, and clones the tutorial repositories, so allow time for downloads and ensure the host has internet access.
+### Configuration - Provider IPs
 
 The provider IP variables are optional. If you override one, choose an unused IPv4 address on that provider's private network; the configured address is also used to derive the tutorial environment's nip.io domain. For example, to change the libvirt guest IP:
 
