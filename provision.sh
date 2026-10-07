@@ -87,6 +87,10 @@ fi
 sed -i "s/^EXT_DOMAIN_NAME=.*/EXT_DOMAIN_NAME=${domain_name}/" "${conf_file}"
 grep -qFx "EXT_DOMAIN_NAME=${domain_name}" "${conf_file}" \
   || echo "EXT_DOMAIN_NAME=${domain_name}" >>"${conf_file}"
+#
+# Keep tutorials within the port range forwarded by the Vagrantfile
+sed -i "s/^LOCAL_RANDOMPORT_MIN=.*/LOCAL_RANDOMPORT_MIN=${PORT_MIN}/" "${conf_file}"
+sed -i "s/^LOCAL_RANDOMPORT_MAX=.*/LOCAL_RANDOMPORT_MAX=${PORT_MAX}/" "${conf_file}"
 # End of localcoda repo modifications
 
 # MODS for eoepca-killercoda repos
@@ -129,6 +133,19 @@ if ! command -v sysbox-runc &>/dev/null; then
   apt-get install -y "/tmp/${SYSBOX_DEB}"
   rm -f "/tmp/${SYSBOX_DEB}"
 fi
+
+# Containers use the VM's DNS resolver, libvirt doesn't answer short service names, which makes gRPC lookups time out.
+DOCKER_BRIDGE_IP="$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')"
+
+mkdir -p /etc/systemd/resolved.conf.d
+cat >/etc/systemd/resolved.conf.d/docker-bridge.conf <<EOF
+[Resolve]
+DNSStubListenerExtra=${DOCKER_BRIDGE_IP}
+EOF
+systemctl restart systemd-resolved
+
+jq --arg ip "${DOCKER_BRIDGE_IP}" '.dns = [$ip]' /etc/docker/daemon.json >/tmp/daemon.json
+mv /tmp/daemon.json /etc/docker/daemon.json
 
 # The sysbox package registers itself as a Docker runtime and restarts
 # docker + sysbox services on install/upgrade, but make sure both are up.

@@ -34,6 +34,9 @@ VM_HOSTNAME = ENV.fetch("CODAVM_HOSTNAME", "codavm")
 # Optional: a routable DNS domain (e.g. mydomain.com) to use instead of the
 # nip.io domain derived from the guest's private network IP.
 EXT_DOMAIN_NAME = ENV.fetch("CODAVM_EXT_DOMAIN_NAME", "")
+# Ports used by Localcoda tutorials. Forwarded from the host when EXT_DOMAIN_NAME is set.
+PORT_MIN = positive_integer_env("CODAVM_PORT_MIN", 20000)
+PORT_MAX = positive_integer_env("CODAVM_PORT_MAX", 20009)
 
 Vagrant.configure("2") do |config|
   # Defaults the machine name to "codavm" instead of Vagrant's "default"
@@ -43,6 +46,8 @@ Vagrant.configure("2") do |config|
   # Ubuntu 24.04 (kernel 6.8+) has native ID-mapped mount support, which
   # Sysbox needs and which avoids having to build/install the shiftfs module.
   config.vm.box = "bento/ubuntu-24.04"
+  # Later versions have no libvirt build.
+  config.vm.box_version = "202508.03.0"
 
   config.vm.hostname = VM_HOSTNAME
 
@@ -81,6 +86,13 @@ Vagrant.configure("2") do |config|
     fi
     resize2fs /dev/ubuntu-vg/ubuntu-lv
   SHELL
+
+  # With a routable domain, browsers reach the tutorials through the host, so forward the tutorial ports to the VM.
+  unless EXT_DOMAIN_NAME.empty?
+    (PORT_MIN..PORT_MAX).each do |port|
+      config.vm.network "forwarded_port", guest: port, host: port, host_ip: "0.0.0.0"
+    end
+  end
 
   # Required for VS Code Remote-SSH / Dev Containers to work smoothly.
   config.ssh.forward_agent = true
@@ -124,6 +136,8 @@ Vagrant.configure("2") do |config|
     override.vm.provision "shell", path: "provision.sh", env: {
       "EXT_IP_ADDR" => VBOX_IP,
       "EXT_DOMAIN_NAME" => EXT_DOMAIN_NAME,
+      "PORT_MIN" => PORT_MIN.to_s,
+      "PORT_MAX" => PORT_MAX.to_s,
       "EOEPCA_KILLERCODA_BRANCH" => KILLERCODA_BRANCH
     }
   end
@@ -132,6 +146,8 @@ Vagrant.configure("2") do |config|
     override.vm.provision "shell", path: "provision.sh", env: {
       "EXT_IP_ADDR" => LIBVIRT_IP,
       "EXT_DOMAIN_NAME" => EXT_DOMAIN_NAME,
+      "PORT_MIN" => PORT_MIN.to_s,
+      "PORT_MAX" => PORT_MAX.to_s,
       "EOEPCA_KILLERCODA_BRANCH" => KILLERCODA_BRANCH
     }
   end
