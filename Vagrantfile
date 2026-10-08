@@ -28,7 +28,8 @@ VM_DISK_GB = positive_integer_env("CODAVM_DISK_GB", 64)
 # Host-overridable guest addresses on each provider's private network.
 VBOX_IP = ipv4_env("CODAVM_VBOX_IP", "192.168.56.10")
 LIBVIRT_IP = ipv4_env("CODAVM_LIBVIRT_IP", "172.28.128.100")
-KILLERCODA_BRANCH = ENV.fetch("CODAVM_KILLERCODA_BRANCH", "eoepca-2.1")
+LOCALCODA_BRANCH = ENV.fetch("CODAVM_LOCALCODA_BRANCH", "eoepca-2.1")
+TUTORIALS_BRANCH = ENV.fetch("CODAVM_TUTORIALS_BRANCH", "eoepca-2.1")
 VM_NAME = ENV.fetch("CODAVM_NAME", "codavm")
 VM_HOSTNAME = ENV.fetch("CODAVM_HOSTNAME", "codavm")
 # Optional: a routable DNS domain (e.g. mydomain.com) to use instead of the
@@ -138,7 +139,8 @@ Vagrant.configure("2") do |config|
       "EXT_DOMAIN_NAME" => EXT_DOMAIN_NAME,
       "PORT_MIN" => PORT_MIN.to_s,
       "PORT_MAX" => PORT_MAX.to_s,
-      "EOEPCA_KILLERCODA_BRANCH" => KILLERCODA_BRANCH
+      "LOCALCODA_BRANCH" => LOCALCODA_BRANCH,
+      "TUTORIALS_BRANCH" => TUTORIALS_BRANCH
     }
   end
 
@@ -148,7 +150,8 @@ Vagrant.configure("2") do |config|
       "EXT_DOMAIN_NAME" => EXT_DOMAIN_NAME,
       "PORT_MIN" => PORT_MIN.to_s,
       "PORT_MAX" => PORT_MAX.to_s,
-      "EOEPCA_KILLERCODA_BRANCH" => KILLERCODA_BRANCH
+      "LOCALCODA_BRANCH" => LOCALCODA_BRANCH,
+      "TUTORIALS_BRANCH" => TUTORIALS_BRANCH
     }
   end
 

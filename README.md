@@ -25,7 +25,8 @@ The VM can be configured using the following environment variables before starti
 | `CODAVM_DISK_GB` | `64` | Disk size in GB |
 | `CODAVM_VBOX_IP` | `192.168.56.10` | VirtualBox guest IP |
 | `CODAVM_LIBVIRT_IP` | `172.28.128.100` | libvirt guest IP |
-| `CODAVM_KILLERCODA_BRANCH` | `eoepca-2.1` | Tutorial repository branch |
+| `CODAVM_LOCALCODA_BRANCH` | `eoepca-2.1` | Localcoda repository branch |
+| `CODAVM_TUTORIALS_BRANCH` | `eoepca-2.1` | Tutorial repository branch |
 | `CODAVM_NAME` | `codavm` | Vagrant machine name (SSH config host and libvirt domain) |
 | `CODAVM_HOSTNAME` | `codavm` | Guest hostname |
 | `CODAVM_EXT_DOMAIN_NAME` | *(none)* | Routable DNS domain (e.g. `mydomain.com`) to use instead of the nip.io domain derived from the guest IP |
@@ -144,7 +145,8 @@ Once the tutorial is running then the terminal output provides the URL to connec
 Provisioning checks out the `eoepca-2.1` branch by default and configures the tutorial environment to use the neighboring `~/localcoda` checkout. To use a different branch, set the override before creating the VM:
 
 ```sh
-export CODAVM_KILLERCODA_BRANCH=my-feature-branch
+export CODAVM_LOCALCODA_BRANCH=my-feature-branch
+export CODAVM_TUTORIALS_BRANCH=my-feature-branch
 vagrant up --provider=virtualbox
 ```
 

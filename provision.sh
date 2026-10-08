@@ -22,7 +22,8 @@ REPOS=(
   "https://github.com/EOEPCA/localcoda"
   "https://github.com/EOEPCA/eoepca-killercoda"
 )
-EOEPCA_KILLERCODA_BRANCH="${EOEPCA_KILLERCODA_BRANCH:-eoepca-2.1}"
+LOCALCODA_BRANCH="${LOCALCODA_BRANCH:-eoepca-2.1}"
+TUTORIALS_BRANCH="${TUTORIALS_BRANCH:-eoepca-2.1}"
 
 # Shared by custom hooks: true if the SSH keypair carried in from the host
 # (see Vagrantfile) is present, checking the same names/order as ssh(1).
@@ -68,6 +69,11 @@ fi
 
 # MODS for localcoda repos
 #
+# Switch to the appropriate branch for localcoda
+sudo -u "${SSH_USER}" env BRANCH="${LOCALCODA_BRANCH}" bash <<'SCRIPT'
+cd "$HOME/localcoda" && git switch "$BRANCH" ; cd "$HOME"
+SCRIPT
+#
 # Use sysbox as the virtualization engine for localcoda
 conf_file="/home/${SSH_USER}/localcoda/backend/cfg/conf"
 sed -i "s/^VIRT_ENGINE=.*/VIRT_ENGINE=sysbox/" "${conf_file}"
@@ -96,7 +102,7 @@ sed -i "s/^LOCAL_RANDOMPORT_MAX=.*/LOCAL_RANDOMPORT_MAX=${PORT_MAX}/" "${conf_fi
 # MODS for eoepca-killercoda repos
 #
 # Switch to the appropriate branch for eoepca-killercoda
-sudo -u "${SSH_USER}" env BRANCH="${EOEPCA_KILLERCODA_BRANCH}" bash <<'SCRIPT'
+sudo -u "${SSH_USER}" env BRANCH="${TUTORIALS_BRANCH}" bash <<'SCRIPT'
 cd "$HOME/eoepca-killercoda" && git switch "$BRANCH" ; cd "$HOME"
 envfile="$HOME/eoepca-killercoda/.env"
 grep -qxF 'export LOCALCODA_ROOT="../localcoda"' "$envfile" 2>/dev/null ||
