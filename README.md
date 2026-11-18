@@ -184,6 +184,16 @@ cp ./contrib/10-enable-k9s-for-all-tutorials.sh .
 ln -s ./contrib/10-enable-k9s-for-all-tutorials.sh .
 ```
 
+## `libvirt` Recovery Measures
+
+In case of a corrupted saved state, e.g. after a reboot of the host...
+
+```
+virsh --connect qemu:///system list --all
+virsh --connect qemu:///system managedsave-remove <domain-name>
+vagrant up
+```
+
 ## Notes
 
 - The Vagrantfile supports VirtualBox and libvirt. The provider selected by `vagrant up` must be installed on the host.
